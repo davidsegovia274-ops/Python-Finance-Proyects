@@ -1,0 +1,52 @@
+import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+
+# Símbolos de acciones y sus nombres completos
+stock_symbols = {
+    'INTC': 'Intel Corporation (INTC)',
+    'VALE': 'Vale SA (VALE)',
+    'BVN': 'Compañia de Minas Buenaventura (BVN)',
+    'FLKR': 'Franklin FTSE South Korea ETF (FLKR)',
+    '^GSPC': 'S&P 500 (^GSPC)'
+}
+
+# Crear escritor de Excel
+excel_writer = pd.ExcelWriter("Historial_precio_acciones.xlsx", engine="openpyxl")
+
+# Definir fechas
+end_date = datetime.today().strftime('%Y-%m-%d')
+start_date = (datetime.today() - timedelta(days=1825)).strftime('%Y-%m-%d')
+print("Fechas:", start_date, end_date)
+
+# Crear figura para los gráficos
+plt.figure(figsize=(12, 8))
+
+# Descargar y guardar datos
+for i, (symbol, full_name) in enumerate(stock_symbols.items(), 1):
+    print("Vamos a descargar el histórico de precios:", symbol)
+    stock_data = yf.download(symbol, start_date, end=end_date)
+    
+    # Guardar en Excel
+    stock_data.to_excel(excel_writer, sheet_name=symbol)
+    
+    # Crear gráfico de precios de cierre con nombre completo
+    plt.subplot(3, 2, i)  # Organizar en 3 filas, 2 columnas
+    plt.plot(stock_data.index, stock_data['Close'], linewidth=1.5)
+    plt.title(f'{full_name}', fontsize=10)
+    plt.xlabel('Fecha')
+    plt.ylabel('Precio ($)')
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+
+# Ajustar layout y mostrar gráficos
+plt.tight_layout()
+plt.savefig('graficos_precios_acciones.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+# Cerrar el escritor de Excel
+excel_writer.close()
+print("\n✅ Proceso completado. Archivos generados:")
+print("   - Historial_precio_acciones.xlsx")
+print("   - graficos_precios_acciones.png")
